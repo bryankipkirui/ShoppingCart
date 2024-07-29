@@ -55,8 +55,9 @@ function addToCart(product) {
     productNumbers = parseInt(productNumbers);
 
     if(productNumbers){
-        localStorage.setItem('cartnumber', productNumbers + 1);
-        document.querySelector('.cart span').textContent = productNumbers + 1;
+        alert("product already in carrt")
+        // localStorage.setItem('cartnumber', productNumbers + 1);
+        // document.querySelector('.cart span').textContent = productNumbers + 1;
     }
     else{
         localStorage.setItem('cartnumber', 1);
@@ -188,16 +189,17 @@ dispalyCart(); //refresh cart display
 
 
 function removeFromCart(tag){
-    let cartItems = JSON.parse(localStorage.getItem('productsInCart')) || {};
+    let cartItems = JSON.parse(localStorage.getItem('productsInCart')) || [];
     let cartCost = parseInt(localStorage.getItem('totalCost')) || 0;
     let cartnumber = parseInt(localStorage.getItem('cartnumber'));
 
-
+    console.log("cartnumber", cartnumber)
+    console.log("tag", tag)
 
     //remove item from cart
     if(cartItems[tag]){
         cartCost -= (cartItems[tag].inCart * cartItems[tag].price);
-        cartnumber -= cartItems[tag].inCart;
+        cartnumber -= 1;
     }
     delete cartItems[tag];
 
