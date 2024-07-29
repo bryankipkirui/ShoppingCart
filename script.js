@@ -8,7 +8,6 @@ let products = [
         price: 20.00,
         inCart: 0
     },
-
     {   
         id: 2,
         name: "BluePink Hoodie",
@@ -16,7 +15,6 @@ let products = [
         price: 22.0,
         inCart: 0
     },
-
     {
         id: 3,
         name: "White Hoodie",
@@ -24,7 +22,6 @@ let products = [
         price: 24.0,
         inCart: 0
     },
-
     {
         id: 4,
         name: "White SweatShirt",
@@ -32,200 +29,146 @@ let products = [
         price: 18.00,
         inCart: 0
     }
-]
+];
 
 for(let i = 0; i < carts.length; i++) {
-    carts[i].addEventListener("click",() => {
+    carts[i].addEventListener("click", () => {
         addToCart(products[i]);
-        totalCost(products[i]);
-    })
+        updateTotalCost();
+    });
 }
 
-function onLoadCartNumbers() {
-    let productNumbers = localStorage.getItem ('cartnumber');
-
-    if(productNumbers){
-        document.querySelector('.cart span').textContent = productNumbers;
-    }
+function updateCartDisplay() {
+    let cartItems = JSON.parse(localStorage.getItem('productsInCart')) || {};
+    let totalItems = Object.values(cartItems).reduce((total, item) => total + item.inCart, 0);
+    document.querySelector('.cart span').textContent = totalItems;
 }
 
 function addToCart(product) {
-    let productNumbers  = localStorage.getItem('cartnumber');
+    let cartItems = JSON.parse(localStorage.getItem('productsInCart')) || {};
 
-    productNumbers = parseInt(productNumbers);
-
-    if(productNumbers){
-        alert("product already in carrt")
-        // localStorage.setItem('cartnumber', productNumbers + 1);
-        // document.querySelector('.cart span').textContent = productNumbers + 1;
-    }
-    else{
-        localStorage.setItem('cartnumber', 1);
-        document.querySelector('.cart span').textContent = 1;
-    }
-    setItem(product);
-}
-
-function setItem(product){
-    let cartItems = localStorage.getItem('productsInCart');
-    cartItems = JSON.parse(cartItems);
-
-    if(cartItems != null){
-        if (cartItems[product.tag] == undefined){
-            cartItems = {
-                ...cartItems,
-                    [product.tag]:product
-            }
-        }
+    if(cartItems[product.tag]) {
         cartItems[product.tag].inCart += 1;
-    }
-    else{
+    } else {
         product.inCart = 1;
-        cartItems = {
-           [product.tag]: product
-       }    
+        cartItems[product.tag] = product;
     }
+    
     localStorage.setItem('productsInCart', JSON.stringify(cartItems));
+    updateCartDisplay();
 }
 
-function totalCost(product){
-let cartCost = localStorage.getItem('totalCost');
-    if(cartCost != null){
-        cartCost = parseInt(cartCost);
-        localStorage.setItem('totalCost', cartCost + product.price);
-    }
-    else{
-        localStorage.setItem('totalCost', product.price);
-    }
+function updateTotalCost() {
+    let cartItems = JSON.parse(localStorage.getItem('productsInCart')) || {};
+    let totalCost = Object.values(cartItems).reduce((total, item) => {
+        return total + (item.price * item.inCart);
+    }, 0);
+    localStorage.setItem('totalCost', totalCost.toFixed(2));
 }
-function dispalyCart(){
-    let cartItems = localStorage.getItem('productsInCart');
-    cartItems = JSON.parse(cartItems);
+
+function displayCart() {
+    let cartItems = JSON.parse(localStorage.getItem('productsInCart')) || {};
     let productContainer = document.querySelector('.products');
-    let cartCost = localStorage.getItem('totalCost');
+    let cartCost = parseFloat(localStorage.getItem('totalCost')) || 0;
 
-    if(cartItems && productContainer){
+    if(Object.keys(cartItems).length > 0 && productContainer) {
         productContainer.innerHTML = '';
-        Object.values(cartItems).map(item => {
+        Object.values(cartItems).forEach(item => {
             productContainer.innerHTML += `
             <div class="product">
                 <i class="fa fa-times-circle remove" data-tag="${item.tag}"></i>
                 <img src="./images/${item.tag}.jpg">
                 <span>${item.name}</span>
             </div>
-            <div class="price">$${item.price}.00</div>
+            <div class="price">$${item.price.toFixed(2)}</div>
             <div class="quantity">
                 <i class="fa fa-caret-left decrease" data-tag="${item.tag}"></i>
                 <span>${item.inCart}</span>
                 <i class="fa fa-caret-right increase" data-tag="${item.tag}"></i>
             </div>
             <div class="total">
-                $${item.inCart * item.price}.00
+                $${(item.inCart * item.price).toFixed(2)}
             </div>
-            `
+            `;
         });
 
         productContainer.innerHTML += `
             <div class="basketTotalContainer">
                 <h4 class="basketTitle">Basket Total</h4>
-                <h4 class="basketTotal">$${cartCost}.00</h4>
+                <h4 class="basketTotal">$${cartCost.toFixed(2)}</h4>
+            </div>
         `;
 
-        //adding event listeners for increase and decrease icons
-        const decreaseButton = document.querySelectorAll('.decrease');
-        const increaseButton = document.querySelectorAll('.increase');
-        const removeButton = document.querySelectorAll('.remove');
-
-        decreaseButton.forEach((button)=>{
-            button.addEventListener('click', ()=>{
-                const tag = button.getAttribute('data-tag');
-                updateCart(tag, 'decrease');
-            });
-        });
-
-        increaseButton.forEach((button)=>{
-            button.addEventListener('click', ()=>{
-                const tag = button.getAttribute('data-tag');
-                updateCart(tag, 'increase');
-            });
-        });
-
-        removeButton.forEach((button)=>{
-            button.addEventListener('click', ()=>{
-                const tag = button.getAttribute('data-tag');
-                removeFromCart(tag);
-            });
-        });
+        addEventListeners();
+    } else if (productContainer) {
+        productContainer.innerHTML = '<p>Your cart is empty</p>';
     }
+    updateCartDisplay();
 }
 
-function updateCart(tag,action){
-    let cartItems = JSON.parse(localStorage.getItem('productsInCart'));
-    let cartCost = parseInt(localStorage.getItem('totalCost'));
-    // console.log(cartItems);
+function addEventListeners() {
+    const decreaseButtons = document.querySelectorAll('.decrease');
+    const increaseButtons = document.querySelectorAll('.increase');
+    const removeButtons = document.querySelectorAll('.remove');
 
-    if (action === 'increase'){
+    decreaseButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const tag = button.getAttribute('data-tag');
+            updateCart(tag, 'decrease');
+        });
+    });
+
+    increaseButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const tag = button.getAttribute('data-tag');
+            updateCart(tag, 'increase');
+        });
+    });
+
+    removeButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const tag = button.getAttribute('data-tag');
+            removeFromCart(tag);
+        });
+    });
+}
+
+function updateCart(tag, action) {
+    let cartItems = JSON.parse(localStorage.getItem('productsInCart'));
+    
+    if (action === 'increase') {
         cartItems[tag].inCart += 1;
-        cartCost += cartItems[tag].price
-    }
-    else if (action === 'decrease'){
-        if(cartItems[tag].inCart > 1){
+    } else if (action === 'decrease') {
+        if (cartItems[tag].inCart > 1) {
             cartItems[tag].inCart -= 1;
-            cartCost -= cartItems[tag].price;
+        } else {
+            removeFromCart(tag);
+            return;
         }
     }
-    else{
-        removeFromCart(tag);
-        return; //exit function after removal
-    }
 
-localStorage.setItem('productsInCart',JSON.stringify(cartItems));
-localStorage.setItem('totalCost', cartCost);
-dispalyCart(); //refresh cart display
-
+    localStorage.setItem('productsInCart', JSON.stringify(cartItems));
+    updateTotalCost();
+    displayCart();
 }
 
+function removeFromCart(tag) {
+    let cartItems = JSON.parse(localStorage.getItem('productsInCart')) || {};
 
-
-
-function removeFromCart(tag){
-    let cartItems = JSON.parse(localStorage.getItem('productsInCart')) || [];
-    let cartCost = parseInt(localStorage.getItem('totalCost')) || 0;
-    let cartnumber = parseInt(localStorage.getItem('cartnumber'));
-
-    console.log("cartnumber", cartnumber)
-    console.log("tag", tag)
-
-    //remove item from cart
-    if(cartItems[tag]){
-        cartCost -= (cartItems[tag].inCart * cartItems[tag].price);
-        cartnumber -= 1;
+    if (cartItems[tag]) {
+        delete cartItems[tag];
     }
-    delete cartItems[tag];
 
-       
-    if(Object.keys(cartItems).length === 0){
+    if (Object.keys(cartItems).length === 0) {
+        localStorage.removeItem('productsInCart');
+        localStorage.removeItem('totalCost');
+    } else {
         localStorage.setItem('productsInCart', JSON.stringify(cartItems));
-        localStorage.setItem('totalCost', cartCost);
-        localStorage.setItem('cartnumber', cartnumber);
-    }
-    
-    else{
-        localStorage.setItem('productsInCart', JSON.stringify(cartItems));
-        localStorage.setItem('totalCost', cartCost);
-        localStorage.setItem('cartnumber', cartnumber);
     }
 
-    // if(localStorage.length == 0){
-    //     localStorage.clear
-    // }
-
-
-    onLoadCartNumbers();
-    dispalyCart(); //refresh the cart display
-
-
+    updateTotalCost();
+    displayCart();
 }
 
-onLoadCartNumbers();
-dispalyCart();
+updateCartDisplay();
+displayCart();
