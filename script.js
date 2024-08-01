@@ -8,7 +8,6 @@ let products = [
         price: 20.00,
         inCart: 0
     },
-
     {   
         id: 2,
         name: "BluePink Hoodie",
@@ -16,7 +15,6 @@ let products = [
         price: 22.0,
         inCart: 0
     },
-
     {
         id: 3,
         name: "White Hoodie",
@@ -24,7 +22,6 @@ let products = [
         price: 24.0,
         inCart: 0
     },
-
     {
         id: 4,
         name: "White SweatShirt",
@@ -32,10 +29,10 @@ let products = [
         price: 18.00,
         inCart: 0
     }
-]
+];
 
 for(let i = 0; i < carts.length; i++) {
-    carts[i].addEventListener("click",() => {
+    carts[i].addEventListener("click", () => {
         addToCart(products[i]);
         // totalCost(products[i]);
     })
@@ -132,16 +129,16 @@ function displayCart(){
                 <img src="./images/${item.tag}.jpg">
                 <span>${item.name}</span>
             </div>
-            <div class="price">$${item.price}.00</div>
+            <div class="price">$${item.price.toFixed(2)}</div>
             <div class="quantity">
                 <i class="fa fa-caret-left decrease" data-tag="${item.tag}"></i>
                 <span>${item.inCart}</span>
                 <i class="fa fa-caret-right increase" data-tag="${item.tag}"></i>
             </div>
             <div class="total">
-                $${item.inCart * item.price}.00
+                $${(item.inCart * item.price).toFixed(2)}
             </div>
-            `
+            `;
         });
         //displaying the total cost of the cart
         productContainer.innerHTML += `
@@ -216,9 +213,6 @@ function updateCart(tag,action){
     let event = new Event("addToCart")
     window.dispatchEvent(event)
 }
-
-
-
 
 function removeFromCart(tag){
     let cartItems = JSON.parse(localStorage.getItem('productsInCart')) || [];
